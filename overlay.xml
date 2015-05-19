@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE repositories SYSTEM "/dtd/repositories.dtd">
+  <repositories xmlns="" version="1.0">
+  <repo quality="experimental" status="unofficial">
+    <name>corl</name>
+    <description>My personal portage playground</description>
+    <homepage>https://github.com/cor-mt/portage-overlay</homepage>
+    <owner>
+      <email>cor@cor.za.net</email>
+      <name>Cor Legemaat</name>
+    </owner>
+    <source type="git">git://github.com/cor-mt/portage-overlay.git</source>
+    <source type="git">https://github.com/cor-mt/portage-overlay.git</source>
+  </repo>
+</repositories>
