@@ -8,7 +8,7 @@ Installing the overlay
 
 You will need to install layman according to the Gentoo Overlay Guide
 
-http://www.gentoo.org/proj/en/overlays/userguide.xml
+https://wiki.gentoo.org/wiki/Project:Overlays/User_Guide
 
 After having layman installed edit its configuration in /etc/layman/layman.cfg to add this overlay to it's list of known overlays.
 
