@@ -4,7 +4,7 @@ EAPI=5
 inherit linux-info xorg-2 eutils
 
 DESCRIPTION="Generic Linux input driver"
-KEYWORDS="*"
+KEYWORDS=""
 IUSE="debounce"
 
 RDEPEND=">=x11-base/xorg-server-1.12[udev]
