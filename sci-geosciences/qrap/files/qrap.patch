@@ -1,0 +1,329 @@
+diff -Naur qrap-9999.orig/CMakeLists.txt qrap-9999/CMakeLists.txt
+--- qrap-9999.orig/CMakeLists.txt	2014-04-27 18:53:38.000000000 +0200
++++ qrap-9999/CMakeLists.txt	2015-08-29 08:48:03.395498279 +0200
+@@ -76,7 +76,7 @@
+ FIND_PACKAGE(Proj)
+ 
+ FIND_PACKAGE(Eigen3)
+-INCLUDE( ${EIGEN3_INCLUDE_DIR} )
++INCLUDE_DIRECTORIES( ${EIGEN3_INCLUDE_DIR} )
+  MESSAGE ( "  Found Eigen Include:" ${EIGEN3_INCLUDE_DIR})
+ 
+ #optional since we can use internal sqlite
+@@ -619,9 +619,7 @@
+ 	/usr/include/eigen3
+ 	/usr/include/gdal
+      	/usr/include/Poco/
+-	/usr/include/qwt-qt4
+-#	/usr/include/qwt
+-     	/usr/include/pqxx
++	/usr/include/qwt5
+ 	/usr/include/armadillo_bits
+ 	/usr/include/boost
+ )
+@@ -642,8 +640,7 @@
+     	libPocoXML.so
+ 	libqgis_core.so
+   	libqgis_gui.so
+-	libqwt-qt4.so
+-#	libqwt.so
++	libqwt.so
+ )
+ 
+ 
+@@ -661,12 +658,12 @@
+ 
+ INSTALL(CODE "MESSAGE(\"Installing Settings Files...\")")
+ INSTALL(FILES ${XML_FILES}
+-       DESTINATION ${QGIS_PLUGIN_DIR}
++       DESTINATION /usr/share/qrap/resources
+ )
+ 
+       
+ INSTALL(CODE "MESSAGE(\"Installing Images...\")")
+ INSTALL(FILES ${IMAGE_FILES}
+-        DESTINATION ${QGIS_PLUGIN_DIR}/images)
++        DESTINATION /usr/share/qrap/images)
+ 
+ 
+diff -Naur qrap-9999.orig/DataBase/LoginDialog.cpp qrap-9999/DataBase/LoginDialog.cpp
+--- qrap-9999.orig/DataBase/LoginDialog.cpp	2014-01-07 10:51:16.000000000 +0200
++++ qrap-9999/DataBase/LoginDialog.cpp	2015-08-29 15:50:58.331971233 +0200
+@@ -38,7 +38,7 @@
+ 	mUsernameLabel = new QLabel(tr("Username:"),this);
+ 	mPasswordLabel = new QLabel(tr("Password:"),this);
+ 	mUsernameEdit = new QLineEdit(this);
+-	mUsernameEdit->insert("postgres");
++	mUsernameEdit->insert("qrap");
+ 	mPasswordEdit = new QLineEdit(this);
+ 	mDbLabel = new QLabel(tr("Database:"),this);
+ 	mHostLabel = new QLabel(tr("Host:"),this);
+@@ -100,7 +100,7 @@
+ 	mPass = mPasswordEdit->text().toStdString();
+ 	mHost = mHostEdit->text().toStdString();
+ 	mDb = mDbEdit->text().toStdString();
+-	mPort = atoi(mPortEdit->text().toStdString().c_str());
++	mPort = mPortEdit->text().toStdString();
+ 	
+ 	// Create a new connections
+ 	if(!gDb.Connect(mUser,mPass,false,mDb,mHost,mPort))
+@@ -129,7 +129,7 @@
+ 	mPass = mPasswordEdit->text().toStdString();
+ 	mHost = mHostEdit->text().toStdString();
+ 	mDb = mDbEdit->text().toStdString();
+-	mPort = atoi(mPortEdit->text().toStdString().c_str());
++	mPort = mPortEdit->text().toStdString();
+ 	close();
+ }
+ 
+@@ -158,7 +158,7 @@
+ }
+ 
+ //*****************************************
+-int LoginDialog::getPort()
++string LoginDialog::getPort()
+ {
+ 	return mPort;
+ }
+diff -Naur qrap-9999.orig/DataBase/LoginDialog.h qrap-9999/DataBase/LoginDialog.h
+--- qrap-9999.orig/DataBase/LoginDialog.h	2014-01-07 10:51:16.000000000 +0200
++++ qrap-9999/DataBase/LoginDialog.h	2015-08-29 15:50:37.413862442 +0200
+@@ -74,7 +74,7 @@
+ 		string getPassword();
+ 		string getDB();
+ 		string getHost();
+-		int getPort();
++		string getPort();
+ 		
+ 	private slots:
+ 		/**
+@@ -104,7 +104,7 @@
+ 		string mPass;
+ 		string mDb;
+ 		string mHost;
+-		int mPort;
++		string mPort;
+ 	};
+ 	// username and password strings
+ }
+diff -Naur qrap-9999.orig/DataBase/cDatabase.cpp qrap-9999/DataBase/cDatabase.cpp
+--- qrap-9999.orig/DataBase/cDatabase.cpp	2014-01-08 15:44:58.000000000 +0200
++++ qrap-9999/DataBase/cDatabase.cpp	2015-08-29 15:42:28.315318735 +0200
+@@ -82,7 +82,7 @@
+ 
+ //***********************************************************************************
+ bool cDatabase::Connect (const string& username, const string& password, bool Create,
+-			const string& database, const string& host, const int Iport)
++			const string& database, const string& host, const string& Iport)
+ {
+ /*	cout << "In cDatabase::Connect: " << username << endl;
+ 	cout << "In cDatabase::Connect: " << password << endl;
+@@ -96,9 +96,7 @@
+ */
+ 	mHostAddr = gSettings.GetValue("database.host");
+ 	mName = gSettings.GetValue("database.name");
+-	string port = gSettings.GetValue("database.port");
+-	mPort = (port.length() == 0) ? 5432 : atoi(port.c_str());
+-	//	mPort =5433;
++	mPort = gSettings.GetValue("database.port");
+ 	gSettings.GetDbStructure(mStructure);
+ 	mConnected=true;
+ 	// try to connect to the database
+@@ -106,12 +104,9 @@
+ 	{
+ 		QRAP_INFO("Authenticating user "+username+"...");
+ 		string query;
+-		char * text = new char[33];
+-		gcvt(mPort,8,text);
+-		query = "hostaddr="+mHostAddr+" dbname="+mName+" port=";
+-		query += text;
++		query = "host="+mHostAddr+" dbname="+mName+" port=";
++		query += mPort;
+ 		query += " user="+username+" password="+password;
+-		delete [] text;
+ 		cout << query << endl;
+ //		pqxx::connection *mConnection;
+ 		mConnection = new pqxx::connection(query);
+@@ -119,6 +114,7 @@
+ 	{
+ 		mConnected=false;
+ 		QRAP_WARN("Invalid username or password specified. ... or port ... or host. Did you create the database? See manual for instructions on creating the database");
++		QRAP_WARN(e.what());
+ //		QRAP_FATAL_CODE("Invalid username or password specified. ... or port ... or host" , acDbAuth);
+ 	} catch (pqxx::internal_error& e)
+ 	{
+@@ -990,7 +986,7 @@
+ 		return true;
+ 	
+ 	// run through the fields
+-	for (pqxx::result::const_fielditerator field=mLastResult[0].begin();
++	for (pqxx::const_tuple_iterator field=mLastResult[0].begin();
+ 		field != mLastResult[0].end(); field++)
+ 	{
+ 		fieldName = field->name();
+@@ -1994,7 +1990,7 @@
+ 	
+ 	// get the headers for this table
+ 	i = 0;
+-	pqxx::result::const_fielditerator field=mLastResult[0].begin();
++	pqxx::const_tuple_iterator field=mLastResult[0].begin();
+ 	
+ 	while (field != mLastResult[0].end())
+ 	{
+@@ -2466,7 +2462,7 @@
+ 		for (i=0;i<count;i++)
+ 		{
+ 			// build the list of column/value pairs
+-			for (pqxx::result::const_fielditerator f=mLastResult[i].begin();
++			for (pqxx::const_tuple_iterator f=mLastResult[i].begin();
+ 				f != mLastResult[i].end(); f++)
+ 			{
+ 				if (string(f->name()) != "id")
+diff -Naur qrap-9999.orig/DataBase/cDatabase.h qrap-9999/DataBase/cDatabase.h
+--- qrap-9999.orig/DataBase/cDatabase.h	2014-01-07 10:51:16.000000000 +0200
++++ qrap-9999/DataBase/cDatabase.h	2015-08-29 15:48:05.552072638 +0200
+@@ -202,7 +202,7 @@
+ 		 * extended information on the reason for failure.
+ 		 */
+ 		bool Connect (const string& username, const string& password, bool Create=false,
+-			const string& database="qrap", const string& host="localhost", const int Iport=5432);
++			const string& database="qrap", const string& host="localhost", const string& Iport="5432");
+ 		
+ 
+ 		bool Connected() { return mConnected;}
+@@ -699,7 +699,7 @@
+ 		 */
+ 		std::string       mHostAddr;               ///< The IP address of the local database.
+ 		std::string       mName;                   ///< The name of the local database to which to connect.
+-		int               mPort;                   ///< The local database port number through which to connect.
++		std::string       mPort;                   ///< The local database port number through which to connect.
+ 		pqxx::connection* mConnection;             ///< The connection to the database.
+ 		DbStructure       mStructure;              ///< The database structure template, loaded from the Settings parameter of the constructor.
+ 		pqxx::result      mLastResult;             ///< The result of the last query to the database.
+diff -Naur qrap-9999.orig/DataBase/settings.xml qrap-9999/DataBase/settings.xml
+--- qrap-9999.orig/DataBase/settings.xml	2015-08-29 15:59:09.556527221 +0200
++++ qrap-9999/DataBase/settings.xml	2015-08-29 09:03:00.778758262 +0200
+@@ -5,7 +5,7 @@
+ 	<logfile location="./qrap.log" />
+ 	
+ 	<!-- Local (client) database settings -->
+-	<database host="127.0.0.1" name="qrap" port="5433" />
++	<database host="127.0.0.1" name="qrap" port="5432" />
+ 	
+ 	<!-- PostGIS settings -->
+ 	<postgis srid="4326" />
+@@ -14,5 +14,5 @@
+ 	<syncserver host="192.168.1.1" port="6234" />
+ 	
+ 	<!-- The location of the database structure XML file -->
+-	<structure location="/usr/lib/qgis/plugins/structure.xml" />
++	<structure location="/usr/share/qrap/resources/structure.xml" />
+ </settings>
+diff -Naur qrap-9999.orig/ExportImport/backup/backup.h qrap-9999/ExportImport/backup/backup.h
+--- qrap-9999.orig/ExportImport/backup/backup.h	2014-01-07 10:51:34.000000000 +0200
++++ qrap-9999/ExportImport/backup/backup.h	2015-08-29 08:18:09.335089225 +0200
+@@ -33,7 +33,7 @@
+ #include <iostream>
+ #include <string>
+ #include <vector>
+-#include <pqxx>
++#include <pqxx/pqxx>
+ 
+ using namespace pqxx;
+ using namespace std;
+diff -Naur qrap-9999.orig/ExportImport/backup/restore.cpp qrap-9999/ExportImport/backup/restore.cpp
+--- qrap-9999.orig/ExportImport/backup/restore.cpp	2014-01-07 10:51:34.000000000 +0200
++++ qrap-9999/ExportImport/backup/restore.cpp	2015-08-29 08:19:09.534373627 +0200
+@@ -29,7 +29,7 @@
+ #include <iostream>
+ #include <string>
+ #include <vector>
+-#include <pqxx>
++#include <pqxx/pqxx>
+ 
+ 
+ using namespace pqxx;
+diff -Naur qrap-9999.orig/ExportImport/flatexport/exportf.h qrap-9999/ExportImport/flatexport/exportf.h
+--- qrap-9999.orig/ExportImport/flatexport/exportf.h	2014-01-07 10:51:34.000000000 +0200
++++ qrap-9999/ExportImport/flatexport/exportf.h	2015-08-29 08:18:28.749180945 +0200
+@@ -27,7 +27,7 @@
+ #include <iostream>
+ #include <string>
+ #include <vector>
+-#include <pqxx>
++#include <pqxx/pqxx>
+ 
+ #define EXPORTF_PRINTSQL // if defined, the SQL statements executed will be printed to STD out
+ 
+diff -Naur qrap-9999.orig/ExportImport/flatimport/importf.h qrap-9999/ExportImport/flatimport/importf.h
+--- qrap-9999.orig/ExportImport/flatimport/importf.h	2014-01-07 10:51:32.000000000 +0200
++++ qrap-9999/ExportImport/flatimport/importf.h	2015-08-29 08:18:40.315235586 +0200
+@@ -29,7 +29,7 @@
+ #include <iostream>
+ #include <string>
+ #include <vector>
+-#include <pqxx>
++#include <pqxx/pqxx>
+ 
+ // if defined, the SQL statements executed will be printed to STD out
+ //#define IMPORTF_PRINTSQL 
+diff -Naur qrap-9999.orig/ExportImport/libfcs/idresolve.h qrap-9999/ExportImport/libfcs/idresolve.h
+--- qrap-9999.orig/ExportImport/libfcs/idresolve.h	2014-01-07 10:51:34.000000000 +0200
++++ qrap-9999/ExportImport/libfcs/idresolve.h	2015-08-29 08:18:59.649326927 +0200
+@@ -29,7 +29,7 @@
+ #include <string>
+ #include <vector>
+ #include <unistd.h>
+-#include <pqxx>
++#include <pqxx/pqxx>
+ 
+ 
+ using namespace pqxx;
+diff -Naur qrap-9999.orig/ExportImport/mergedelete/mergedelete.h qrap-9999/ExportImport/mergedelete/mergedelete.h
+--- qrap-9999.orig/ExportImport/mergedelete/mergedelete.h	2014-01-07 10:51:34.000000000 +0200
++++ qrap-9999/ExportImport/mergedelete/mergedelete.h	2015-08-29 08:18:50.763284946 +0200
+@@ -28,7 +28,7 @@
+ #include <iostream>
+ #include <string>
+ #include <vector>
+-#include <pqxx>
++#include <pqxx/pqxx>
+ 
+ using namespace pqxx;
+ using namespace std;
+diff -Naur qrap-9999.orig/Interface/cUpdateToServer.cpp qrap-9999/Interface/cUpdateToServer.cpp
+--- qrap-9999.orig/Interface/cUpdateToServer.cpp	2014-01-07 10:51:12.000000000 +0200
++++ qrap-9999/Interface/cUpdateToServer.cpp	2015-08-29 08:18:19.909139181 +0200
+@@ -24,7 +24,7 @@
+ 
+ #include <string>
+ #include <vector>
+-#include <pqxx>
++#include <pqxx/pqxx>
+ 
+ using namespace pqxx;
+ 
+diff -Naur qrap-9999.orig/qrap.cpp qrap-9999/qrap.cpp
+--- qrap-9999.orig/qrap.cpp	2014-07-08 14:47:12.000000000 +0200
++++ qrap-9999/qrap.cpp	2015-08-29 08:57:06.779075920 +0200
+@@ -291,7 +291,7 @@
+ 	/** \TODO: Get a place for settings.xml and structure.xml or find a way to set the location
+ 	 */
+ 
+-	if (!gSettings.LoadFromFile("/usr/lib/qgis/plugins/settings.xml"))
++	if (!gSettings.LoadFromFile("/usr/share/qrap/resources/settings.xml"))
+ 	{
+ 		cout << "Error while loading settings from settings.xml" << endl;
+ 		exit(1);
+diff -Naur qrap-9999.orig/qrap.h qrap-9999/qrap.h
+--- qrap-9999.orig/qrap.h	2014-01-08 15:43:36.000000000 +0200
++++ qrap-9999/qrap.h	2015-08-29 08:16:24.974596191 +0200
+@@ -86,7 +86,7 @@
+ #include "Prediction/cSpectralPlot.h"
+ #include "Prediction/cPlotTask.h"
+ #include "Prediction/cLink.h"
+-#include <cMouseEvents.h>
++#include "cMouseEvents.h"
+ #include "Interface/cPlaceSite.h"
+ #include "Interface/cDeleteObject.h"
+ #include "Interface/cConfirmLink.h"
