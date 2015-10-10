@@ -76,6 +76,25 @@ src_prepare() {
 	epatch "${FILESDIR}"/${P}-geoimage.patch
 	epatch "${FILESDIR}"/${P}-gdal2.patch
 
+	if use qt4; then
+	   sed -i -e "s:#include\ <QtWidgets/QDockWidget>:#include\ <QtGui/QDockWidget>:" \
+	   src/Docks/GeoImageDock.h || die "Sed faild."
+	   sed -i -e "s:#include\ <QtWidgets/QShortcut>:#include\ <QtGui/QShortcut>:" \
+	   src/Docks/GeoImageDock.h || die "Sed faild."
+	   sed -i -e "s:#include\ <QtWidgets/QInputDialog>:#include\ <QtGui/QInputDialog>:" \
+	   src/Docks/GeoImageDock.cpp || die "Sed faild."
+	   sed -i -e "s:#include\ <QtWidgets/QMessageBox>:#include\ <QtGui/QMessageBox>:" \
+	   src/Docks/GeoImageDock.cpp || die "Sed faild."
+	   sed -i -e "s:#include\ <QtWidgets/QProgressDialog>:#include\ <QtGui/QProgressDialog>:" \
+	   src/Docks/GeoImageDock.cpp || die "Sed faild."
+	   sed -i -e "s:#include\ <QtWidgets/QRadioButton>:#include\ <QtGui/QRadioButton>:" \
+	   src/Docks/GeoImageDock.cpp || die "Sed faild."
+	   sed -i -e "s:#include\ <QtWidgets/QTimeEdit>:#include\ <QtGui/QTimeEdit>:" \
+	   src/Docks/GeoImageDock.cpp || die "Sed faild."
+	   sed -i -e "s:#include\ <QtWidgets/QDialogButtonBox>:#include\ <QtGui/QDialogButtonBox>:" \
+	   src/Docks/GeoImageDock.cpp || die "Sed faild."
+	fi
+
 	if use qt5; then
 	   sed -i -e "s/DEFINES\ +=\ USE_ZBAR/DEFINES\ +=\ USE_ZBAR\ QT_DISABLE_DEPRECATED_BEFORE=0x040900/" \
 	   plugins/background/MWalkingPapersBackground/MWalkingPapersBackground.pro || die "Sed faild!"
