@@ -1,0 +1,63 @@
+From b333cd33e487f79ae8cd0c2eea145baf650e793d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ladislav=20L=C3=A1ska?= <krakonos@krakonos.org>
+Date: Sun, 26 Jul 2015 00:01:07 +0200
+Subject: [PATCH] Fixed GDAL imports for GDAL 2.0.
+
+The GDALOpen is not willing to use vector formats. Replaced by GDALOpenEx.
+---
+ src/ImportExport/ImportExportGdal.cpp | 7 +++----
+ src/MainWindow.cpp                    | 2 +-
+ src/common/Document.cpp               | 3 ---
+ 3 files changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/src/ImportExport/ImportExportGdal.cpp b/src/ImportExport/ImportExportGdal.cpp
+index 4641854..3aa99f3 100644
+--- a/src/ImportExport/ImportExportGdal.cpp
++++ b/src/ImportExport/ImportExportGdal.cpp
+@@ -487,16 +487,15 @@ bool ImportExportGdal::import(Layer* aLayer)
+ #ifdef GDAL2
+     GDALAllRegister();
+     GDALDataset *poDS;
+-    poDS = (GDALDataset *) GDALOpen( FileName.toUtf8().constData(), GA_ReadOnly );
++    poDS = (GDALDataset *) GDALOpenEx( FileName.toUtf8().constData(), GDAL_OF_VECTOR | GDAL_OF_RASTER | GDAL_OF_VERBOSE_ERROR, NULL, NULL, NULL );
+ #else
+     OGRRegisterAll();
+     OGRDataSource *poDS;
+     poDS = OGRSFDriverRegistrar::Open( FileName.toUtf8().constData(), FALSE );
+ #endif
+ 
+-    if( poDS == NULL )
+-    {
+-        qDebug( "GDAL Open failed.\n" );
++    if( poDS == NULL ) {
++        //qDebug() << "GDAL Open failed from file " << FileName.toUtf8().constData();
+         return false;
+     }
+ 
+diff --git a/src/MainWindow.cpp b/src/MainWindow.cpp
+index 116bb60..d27301c 100755
+--- a/src/MainWindow.cpp
++++ b/src/MainWindow.cpp
+@@ -1739,7 +1739,7 @@ MainWindow::ImportStatus MainWindow::importFile(Document * mapDocument, const QS
+         newLayer = new DrawingLayer( baseFileName );
+         newLayer->setUploadable(false);
+         mapDocument->add(newLayer);
+-        return mapDocument->importGDAL(baseFileName, (DrawingLayer*)newLayer) ? IMPORT_OK : IMPORT_ERROR;
++        return mapDocument->importGDAL(fileName, (DrawingLayer*)newLayer) ? IMPORT_OK : IMPORT_ERROR;
+     }
+ }
+ 
+diff --git a/src/common/Document.cpp b/src/common/Document.cpp
+index d17072d..39d03e8 100644
+--- a/src/common/Document.cpp
++++ b/src/common/Document.cpp
+@@ -736,9 +736,6 @@ bool Document::importKML(const QString& filename, TrackLayer* NewLayer)
+ #ifndef _MOBILE
+ bool Document::importGDAL(const QString& filename, DrawingLayer* NewLayer)
+ {
+-    Q_UNUSED(filename)
+-    Q_UNUSED(NewLayer)
+-
+     ImportExportGdal imp(this);
+     if (!imp.loadFile(filename))
+         return false;
