@@ -4,7 +4,7 @@ EAPI=5
 inherit linux-info xorg-2 eutils
 
 DESCRIPTION="Generic Linux input driver"
-KEYWORDS=""
+KEYWORDS="~amd64 ~x86"
 IUSE="debounce"
 
 RDEPEND=">=x11-base/xorg-server-1.12[udev]
@@ -19,9 +19,11 @@ src_prepare() {
 	if use debounce ; then
 	   epatch "${FILESDIR}"/${P}-debounce.patch
 	fi
+
+	xorg-2_src_prepare
 }
 
-pre_src_compile() {
+pkg_pretend() {
 	if use kernel_linux ; then
 		CONFIG_CHECK="~INPUT_EVDEV"
 	fi
@@ -34,6 +36,8 @@ src_install() {
 	   insinto /etc/X11/xorg.conf.d/
 	   newins "${FILESDIR}/debounce.conf" 11-evdev-mouse-debounce.conf
 	fi
+
+	xorg-2_src_install
 }
 
 pkg_postinst() {
@@ -43,4 +47,6 @@ pkg_postinst() {
 	   elog "http://lists.x.org/archives/xorg-devel/2012-August/033225.html"
 	   elog "for details."
 	fi
+
+	xorg-2_pkg_postinst
 }
