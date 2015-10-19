@@ -24,7 +24,7 @@ REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 DEPEND="dev-qt/linguist-tools:5"
 RDEPEND="
 	${PYTHON_DEPS}
-	dev-libs/protobuf:3
+	dev-libs/protobuf:0/10[${PYTHON_USEDEP}]
 	dev-qt/qtwidgets:5
 	dev-python/PyQt5[${PYTHON_USEDEP},widgets,gui]
 	serial? ( dev-python/pyserial[${PYTHON_USEDEP}] )

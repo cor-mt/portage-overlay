@@ -24,7 +24,7 @@ REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 DEPEND=""
 RDEPEND="
 	${PYTHON_DEPS}
-	dev-libs/protobuf:3[${PYTHON_USEDEP}]
+	dev-libs/protobuf:0/10[${PYTHON_USEDEP}]
 "
 
 src_prepare () {

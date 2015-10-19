@@ -21,7 +21,7 @@ S="${WORKDIR}/${MY_P}"
  
 DEPEND=""
 RDEPEND="
-	dev-libs/protobuf:3
+	dev-libs/protobuf:0/10
 	=dev-libs/libarcus-${PV}
 "
 
