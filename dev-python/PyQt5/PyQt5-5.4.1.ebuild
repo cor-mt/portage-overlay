@@ -1,6 +1,6 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-python/PyQt5/PyQt5-5.4.1.ebuild,v 1.1 2015/03/02 03:19:23 pesa Exp $
+# $Id$
 
 EAPI=5
 PYTHON_COMPAT=( python{2_7,3_3,3_4} )
@@ -8,13 +8,13 @@ PYTHON_COMPAT=( python{2_7,3_3,3_4} )
 inherit eutils multibuild multilib python-r1 qmake-utils
 
 DESCRIPTION="Python bindings for the Qt framework"
-HOMEPAGE="http://www.riverbankcomputing.co.uk/software/pyqt/intro/
+HOMEPAGE="http://www.riverbankcomputing.com/software/pyqt/intro
 	https://pypi.python.org/pypi/PyQt5"
 
 MY_PN="PyQt-gpl"
 if [[ ${PV} == *_pre* ]]; then
 	MY_P=${MY_PN}-${PV%_pre*}-snapshot-${REVISION}
-	SRC_URI="http://dev.gentoo.org/~pesa/distfiles/${MY_P}.tar.xz"
+	SRC_URI="https://dev.gentoo.org/~pesa/distfiles/${MY_P}.tar.xz"
 else
 	MY_P=${MY_PN}-${PV}
 	SRC_URI="mirror://sourceforge/pyqt/${MY_P}.tar.gz"
@@ -22,12 +22,12 @@ fi
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="amd64 arm ~x86"
 
-# TODO: bluetooth, webchannel, webengine
-IUSE="dbus debug declarative designer doc examples gui help multimedia network
-	opengl positioning printsupport sensors serialport sql svg testlib webkit
-	websockets widgets x11extras xmlpatterns"
+# TODO: QtBluetooth, QtLocation, QtNfc, QtWebEngineWidgets
+IUSE="dbus debug declarative designer doc examples gles2 gui help multimedia
+	network opengl positioning printsupport sensors serialport sql svg
+	testlib webchannel webkit websockets widgets x11extras xmlpatterns"
 REQUIRED_USE="
 	${PYTHON_REQUIRED_USE}
 	positioning? ( gui )
@@ -35,11 +35,11 @@ REQUIRED_USE="
 	serialport? ( gui )
 	sql? ( widgets )
 	testlib? ( widgets )
-	websockets? ( gui )
+	webchannel? ( network )
 "
 
 # Minimal supported version of Qt.
-QT_PV="5.3.2:5"
+QT_PV="5.4.2:5"
 
 RDEPEND="
 	${PYTHON_DEPS}
@@ -52,7 +52,7 @@ RDEPEND="
 	)
 	declarative? ( >=dev-qt/qtdeclarative-${QT_PV}[widgets?] )
 	designer? ( >=dev-qt/designer-${QT_PV} )
-	gui? ( >=dev-qt/qtgui-${QT_PV} )
+	gui? ( >=dev-qt/qtgui-${QT_PV}[gles2=] )
 	help? ( >=dev-qt/qthelp-${QT_PV} )
 	multimedia? ( >=dev-qt/qtmultimedia-${QT_PV}[widgets?] )
 	network? ( >=dev-qt/qtnetwork-${QT_PV} )
@@ -64,6 +64,7 @@ RDEPEND="
 	sql? ( >=dev-qt/qtsql-${QT_PV} )
 	svg? ( >=dev-qt/qtsvg-${QT_PV} )
 	testlib? ( >=dev-qt/qttest-${QT_PV} )
+	webchannel? ( >=dev-qt/qtwebchannel-${QT_PV} )
 	webkit? ( >=dev-qt/qtwebkit-${QT_PV}[printsupport] )
 	websockets? ( >=dev-qt/qtwebsockets-${QT_PV} )
 	widgets? ( >=dev-qt/qtwidgets-${QT_PV} )
@@ -82,7 +83,14 @@ src_prepare() {
 }
 
 pyqt_use_enable() {
-	use $1 && echo --enable=${2:-Qt$(tr 'a-z' 'A-Z' <<< ${1:0:1})${1:1}}
+	use "$1" || return
+
+	if [[ $# -eq 1 ]]; then
+		echo --enable=Qt$(tr 'a-z' 'A-Z' <<< ${1:0:1})${1:1}
+	else
+		shift
+		echo ${@/#/--enable=}
+	fi
 }
 
 src_configure() {
@@ -90,26 +98,23 @@ src_configure() {
 		local myconf=(
 			"${PYTHON}"
 			"${S}"/configure.py
+			$(use debug && echo --debug --trace)
+			--verbose
 			--confirm-license
-			--qmake="${EPREFIX}/usr/$(get_libdir)/qt5/bin/qmake"
+			--qmake="$(qt5_get_bindir)"/qmake
 			--destdir="$(python_get_sitedir)"
-			--assume-shared
-			--no-timestamp
 			--qsci-api
-			$(use debug && echo --debug)
 			--enable=QtCore
 			--enable=QtXml
 			$(pyqt_use_enable dbus QtDBus)
-			$(pyqt_use_enable declarative QtQml)
-			$(pyqt_use_enable declarative QtQuick)
-			$(usex declarative '' '' $(pyqt_use_enable widgets QtQuickWidgets))
+			$(pyqt_use_enable declarative QtQml QtQuick $(usex widgets QtQuickWidgets ''))
 			$(usex declarative '' --no-qml-plugin)
 			$(pyqt_use_enable designer)
 			$(usex designer '' --no-designer-plugin)
 			$(pyqt_use_enable gui)
+			$(pyqt_use_enable gui $(use gles2 && echo _QOpenGLFunctions_ES2 || echo _QOpenGLFunctions_{2_0,2_1,4_1_Core}))
 			$(pyqt_use_enable help)
-			$(pyqt_use_enable multimedia)
-			$(usex multimedia '' '' $(pyqt_use_enable widgets QtMultimediaWidgets))
+			$(pyqt_use_enable multimedia QtMultimedia $(usex widgets QtMultimediaWidgets ''))
 			$(pyqt_use_enable network)
 			$(pyqt_use_enable opengl QtOpenGL)
 			$(pyqt_use_enable positioning)
@@ -119,8 +124,8 @@ src_configure() {
 			$(pyqt_use_enable sql)
 			$(pyqt_use_enable svg)
 			$(pyqt_use_enable testlib QtTest)
-			$(pyqt_use_enable webkit QtWebKit)
-			$(pyqt_use_enable webkit QtWebKitWidgets)
+			$(pyqt_use_enable webchannel QtWebChannel)
+			$(pyqt_use_enable webkit QtWebKit QtWebKitWidgets)
 			$(pyqt_use_enable websockets QtWebSockets)
 			$(pyqt_use_enable widgets)
 			$(pyqt_use_enable x11extras QtX11Extras)

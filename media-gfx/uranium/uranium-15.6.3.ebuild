@@ -25,10 +25,10 @@ DEPEND=""
 RDEPEND="
 	${PYTHON_DEPS}
 	dev-qt/qtquickcontrols:5
-	<dev-python/PyQt5-5.5[${PYTHON_USEDEP},declarative,network,opengl]
+	<dev-python/PyQt5-5.5[${PYTHON_USEDEP},declarative,network,gui,gles2]
 	dev-python/numpy[${PYTHON_USEDEP}]
 	dev-python/six[${PYTHON_USEDEP}]
-	dev-libs/protobuf:0/10[${PYTHON_USEDEP}]
+	dev-libs/protobuf:3[${PYTHON_USEDEP}]
 	=dev-libs/libarcus-${PV}[${PYTHON_USEDEP}]
 "
 
