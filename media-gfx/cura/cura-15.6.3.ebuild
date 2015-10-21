@@ -26,6 +26,7 @@ RDEPEND="
 	${PYTHON_DEPS}
 	dev-libs/protobuf:0/10[${PYTHON_USEDEP}]
 	dev-qt/qtwidgets:5
+	dev-qt/qtgui[egl,gles2]
 	dev-python/PyQt5[${PYTHON_USEDEP},widgets,gui]
 	serial? ( dev-python/pyserial[${PYTHON_USEDEP}] )
 	=media-gfx/uranium-${PV}
