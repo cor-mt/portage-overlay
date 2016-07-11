@@ -7,7 +7,7 @@ PYTHON_COMPAT=( python3_4 )
 inherit cmake-utils eutils python-single-r1
 
 MY_PN="Uranium"
-MY_PV="15.06.03"
+MY_PV="2.1.0"
 MY_P="${MY_PN}-${MY_PV}"
 
 DESCRIPTION="A Python framework for building Desktop applications."
@@ -25,10 +25,10 @@ DEPEND=""
 RDEPEND="
 	${PYTHON_DEPS}
 	dev-qt/qtquickcontrols:5
-	<dev-python/PyQt5-5.5[${PYTHON_USEDEP},declarative,network,gui,gles2]
+	dev-python/PyQt5[${PYTHON_USEDEP},declarative,network,gui,gles2]
 	dev-python/numpy[${PYTHON_USEDEP}]
 	dev-python/six[${PYTHON_USEDEP}]
-	dev-libs/protobuf:0/10[${PYTHON_USEDEP}]
+	dev-libs/protobuf:0/10b3[${PYTHON_USEDEP}]
 	=dev-libs/libarcus-${PV}[${PYTHON_USEDEP}]
 "
 

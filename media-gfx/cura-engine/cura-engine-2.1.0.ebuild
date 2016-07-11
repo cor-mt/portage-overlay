@@ -6,7 +6,7 @@ EAPI="5"
 inherit cmake-utils eutils
 
 MY_PN="CuraEngine"
-MY_PV="15.06.03"
+MY_PV="2.1.0"
 MY_P="${MY_PN}-${MY_PV}"
 
 DESCRIPTION="The CuraEngine is a C++ console application for 3D printing GCode generation."
@@ -21,7 +21,7 @@ S="${WORKDIR}/${MY_P}"
  
 DEPEND=""
 RDEPEND="
-	dev-libs/protobuf:0/10
+	dev-libs/protobuf:0/10b3
 	=dev-libs/libarcus-${PV}
 "
 
