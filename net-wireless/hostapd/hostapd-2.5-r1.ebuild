@@ -31,6 +31,8 @@ src_prepare() {
 	sed -i -e "s:/etc/hostapd:/etc/hostapd/hostapd:g" \
 		"${S}/hostapd.conf" || die
 
+	cd "../"
+
 	if use ignaccerr;then
 		epatch "${FILESDIR}"/${P}-ignore_association_responce_errors.patch
 	fi
