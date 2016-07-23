@@ -1,0 +1,20 @@
+--- src/ap/ieee802_11.c.orig	2016-07-23 09:41:11.854243731 +0200
++++ src/ap/ieee802_11.c	2016-07-23 09:42:35.428508279 +0200
+@@ -2392,7 +2392,7 @@
+ 		hostapd_logger(hapd, mgmt->da, HOSTAPD_MODULE_IEEE80211,
+ 			       HOSTAPD_LEVEL_NOTICE,
+ 			       "did not acknowledge authentication response");
+-		return;
++		//return;
+ 	}
+ 
+ 	if (len < IEEE80211_HDRLEN + sizeof(mgmt->u.auth)) {
+@@ -2475,7 +2475,7 @@
+ 			       HOSTAPD_LEVEL_DEBUG,
+ 			       "did not acknowledge association response");
+ 		sta->flags &= ~WLAN_STA_ASSOC_REQ_OK;
+-		return;
++		//return;
+ 	}
+ 
+ 	if (reassoc)
