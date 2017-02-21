@@ -150,7 +150,7 @@ diff -Naur qrap-9999.orig/DataBase/cDatabase.h qrap-9999/DataBase/cDatabase.h
  		 */
  		bool Connect (const string& username, const string& password, bool Create=false,
 -			const string& database="qrap", const string& host="localhost", const int Iport=5432);
-+			const string& database="qrap", const string& host="localhost", const string& Iport=5432);
++			const string& database="qrap", const string& host="localhost", const string& Iport="5432");
  		
  
  		bool Connected() { return mConnected;}
